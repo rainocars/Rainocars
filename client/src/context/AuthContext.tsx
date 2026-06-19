@@ -21,11 +21,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem('raino_access_token');
+    if (!token) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
     try {
       const response = await api.get('/auth/me');
       setUser(response.data.data.user);
     } catch (error) {
-      setUser(null);
+      // If access token expired, try using refresh token
+      const refreshToken = localStorage.getItem('raino_refresh_token');
+      if (refreshToken) {
+        try {
+          const refreshRes = await api.post('/auth/refresh-token', { refreshToken });
+          const { token: newToken, refreshToken: newRefreshToken, user: userData } = refreshRes.data.data;
+          localStorage.setItem('raino_access_token', newToken);
+          if (newRefreshToken) localStorage.setItem('raino_refresh_token', newRefreshToken);
+          setUser(userData);
+        } catch (refreshErr) {
+          localStorage.removeItem('raino_access_token');
+          localStorage.removeItem('raino_refresh_token');
+          setUser(null);
+        }
+      } else {
+        localStorage.removeItem('raino_access_token');
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -35,6 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refreshUser();
 
     const handleLogout = () => {
+      localStorage.removeItem('raino_access_token');
+      localStorage.removeItem('raino_refresh_token');
       setUser(null);
     };
 
@@ -48,7 +73,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.data.status === 'otp_required') {
         return { ok: true, otpRequired: true };
       }
-      const userData = response.data.data.user;
+      const { token, refreshToken, user: userData } = response.data.data;
+      localStorage.setItem('raino_access_token', token);
+      localStorage.setItem('raino_refresh_token', refreshToken);
       setUser(userData);
       return { ok: true, role: userData.role };
     } catch (error: any) {
@@ -62,7 +89,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = useCallback(async (data: { name: string; email: string; phone: string; password: string; otp: string }) => {
     try {
       const response = await api.post('/auth/register', data);
-      const userData = response.data.data.user;
+      const { token, refreshToken, user: userData } = response.data.data;
+      localStorage.setItem('raino_access_token', token);
+      localStorage.setItem('raino_refresh_token', refreshToken);
       setUser(userData);
       return { ok: true };
     } catch (error: any) {
@@ -89,6 +118,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await api.post('/auth/logout');
     } finally {
+      localStorage.removeItem('raino_access_token');
+      localStorage.removeItem('raino_refresh_token');
       setUser(null);
     }
   }, []);

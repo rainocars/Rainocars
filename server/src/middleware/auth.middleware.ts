@@ -11,7 +11,11 @@ export interface AuthRequest extends Request {
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies.accessToken;
+    let token = req.cookies.accessToken;
+
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
       throw new AppError('You are not logged in. Please login to continue.', 401);

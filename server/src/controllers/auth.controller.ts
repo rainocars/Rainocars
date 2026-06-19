@@ -110,6 +110,8 @@ export class AuthController {
       status: 'success',
       message: 'User registered successfully',
       data: {
+        token: accessToken,
+        refreshToken: refreshToken,
         user: {
           id: user._id,
           name: user.name,
@@ -180,6 +182,8 @@ export class AuthController {
       status: 'success',
       message: 'Logged in successfully',
       data: {
+        token: accessToken,
+        refreshToken: refreshToken,
         user: {
           id: user._id,
           name: user.name,
@@ -200,16 +204,18 @@ export class AuthController {
   });
 
   static refresh = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies.refreshToken;
+    const token = req.cookies.refreshToken || req.body.refreshToken;
     if (!token) throw new AppError('Refresh token missing', 401);
 
     const user = await AuthService.verifyRefreshToken(token);
-    const { accessToken } = AuthService.generateTokens((user._id as any).toString(), user.role);
+    const { accessToken, refreshToken: newRefreshToken } = AuthService.generateTokens((user._id as any).toString(), user.role);
     res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000));
     res.status(200).json({
       status: 'success',
       message: 'Token refreshed',
       data: {
+        token: accessToken,
+        refreshToken: newRefreshToken,
         user: { id: user._id, role: user.role }
       }
     });

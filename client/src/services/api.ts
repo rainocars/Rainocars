@@ -8,9 +8,13 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Add any dynamic headers if needed
+// Request Interceptor: Attach access token from localStorage
 api.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('raino_access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -34,12 +38,24 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Attempt to refresh the token
-        await api.post('/auth/refresh-token');
+        // Attempt to refresh the token using stored refresh token
+        const refreshToken = localStorage.getItem('raino_refresh_token');
+        const refreshResponse = await api.post('/auth/refresh-token', { refreshToken });
+        const { token: newToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
+
+        if (newToken) {
+          localStorage.setItem('raino_access_token', newToken);
+        }
+        if (newRefreshToken) {
+          localStorage.setItem('raino_refresh_token', newRefreshToken);
+        }
+
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh token also expired -> logout user
+        localStorage.removeItem('raino_access_token');
+        localStorage.removeItem('raino_refresh_token');
         window.dispatchEvent(new CustomEvent('auth-logout'));
         return Promise.reject(refreshError);
       }
