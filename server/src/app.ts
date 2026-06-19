@@ -15,6 +15,9 @@ import notificationRoutes from './routes/notification.routes';
 
 const app = express();
 
+// Trust proxy for reverse proxy environments like Render/Vercel
+app.set('trust proxy', 1);
+
 // 1. GLOBAL MIDDLEWARES
 app.use(helmet()); // Security headers
 app.use(cors({
