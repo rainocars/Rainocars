@@ -8,6 +8,19 @@ import Otp from '../models/Otp';
 import { EmailService } from '../services/email.service';
 import { AppError } from '../utils/AppError';
 
+const getCookieOptions = (maxAge: number) => {
+  const options: any = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge
+  };
+  if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN && process.env.COOKIE_DOMAIN !== 'localhost') {
+    options.domain = process.env.COOKIE_DOMAIN;
+  }
+  return options;
+};
+
 export class AuthController {
   static sendOtp = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
@@ -90,19 +103,8 @@ export class AuthController {
 
     const { accessToken, refreshToken } = AuthService.generateTokens((user._id as any).toString(), user.role);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 15 * 60 * 1000, // 15 mins
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000)); // 15 mins
+    res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000)); // 7 days
 
     res.status(201).json({
       status: 'success',
@@ -171,19 +173,8 @@ export class AuthController {
     // 4. Verification successful, generate tokens and log in
     const { accessToken, refreshToken } = AuthService.generateTokens((user._id as any).toString(), user.role);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 15 * 60 * 1000,
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000));
+    res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
     res.status(200).json({
       status: 'success',
@@ -214,14 +205,7 @@ export class AuthController {
 
     const user = await AuthService.verifyRefreshToken(token);
     const { accessToken } = AuthService.generateTokens((user._id as any).toString(), user.role);
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 15 * 60 * 1000,
-    });
-
+    res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000));
     res.status(200).json({
       status: 'success',
       message: 'Token refreshed',
