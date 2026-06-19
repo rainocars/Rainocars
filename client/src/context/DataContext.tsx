@@ -160,7 +160,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, [refresh]);
 
   const getAllUserDocuments = useCallback(async () => {
-    const res = await api.get('/admin/documents');
+    const res = await api.get('/users/admin/documents');
     return res.data.data.documents;
   }, []);
 

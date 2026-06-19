@@ -19,7 +19,36 @@ export class BookingService {
       throw new AppError('Invalid booking dates', 400);
     }
 
-    // Validate overlapping bookings
+    // 1. Check if the exact booking already exists as PENDING and UNPAID for this user
+    const existingPending = await Booking.findOne({
+      userId,
+      carId,
+      startDate: start,
+      endDate: end,
+      status: 'PENDING',
+      paymentStatus: 'UNPAID'
+    });
+
+    if (existingPending) {
+      const baseAmount = car.pricePerDay * totalDays;
+      const pickupCharge = pickupMode === 'DELIVERY' ? 500 : 0;
+      const dropCharge = dropMode === 'DELIVERY' ? 500 : 0;
+      const taxAmount = baseAmount * 0.18;
+      const totalAmount = baseAmount + pickupCharge + dropCharge + taxAmount;
+
+      existingPending.pickupMode = pickupMode;
+      existingPending.dropMode = dropMode;
+      existingPending.pickupLocation = pickupLocation;
+      existingPending.dropLocation = dropLocation;
+      existingPending.pickupCharge = pickupCharge;
+      existingPending.dropCharge = dropCharge;
+      existingPending.taxAmount = taxAmount;
+      existingPending.totalAmount = totalAmount;
+      await existingPending.save();
+      return existingPending;
+    }
+
+    // 2. Validate overlapping bookings
     const overlappingBooking = await Booking.findOne({
       carId,
       status: { $in: ['PENDING', 'CONFIRMED', 'ACTIVE'] },
@@ -57,10 +86,6 @@ export class BookingService {
       paymentStatus: 'UNPAID'
     });
 
-    // Mark car as unavailable if confirmed (simplified)
-    // In a real scenario, we would check for overlapping date ranges
-    await Car.findByIdAndUpdate(carId, { isAvailable: false });
-
     return booking;
   }
 
@@ -83,11 +108,6 @@ export class BookingService {
     const booking = await Booking.findByIdAndUpdate(id, { status }, { new: true });
     if (!booking) throw new AppError('Booking not found', 404);
 
-    // If booking is cancelled, make car available again
-    if (status === 'CANCELLED') {
-      await Car.findByIdAndUpdate(booking.carId, { isAvailable: true });
-    }
-
     return booking;
   }
 
@@ -101,8 +121,6 @@ export class BookingService {
 
     booking.status = 'CANCELLED';
     await booking.save();
-
-    await Car.findByIdAndUpdate(booking.carId, { isAvailable: true });
 
     return booking;
   }

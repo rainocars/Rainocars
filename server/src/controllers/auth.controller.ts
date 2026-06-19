@@ -94,12 +94,10 @@ export class AuthController {
     // Clean up OTP record
     await Otp.deleteOne({ email });
 
-    // Send Welcome Email
-    try {
-      await EmailService.sendWelcomeEmail(user.email, user.name);
-    } catch (err) {
-      console.error('Failed to send welcome email:', err);
-    }
+    // Send Welcome Email in background to prevent request lag
+    EmailService.sendWelcomeEmail(user.email, user.name).catch(err => {
+      console.error('Failed to send welcome email in background:', err);
+    });
 
     const { accessToken, refreshToken } = AuthService.generateTokens((user._id as any).toString(), user.role);
 
