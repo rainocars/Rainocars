@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --color-primary: 0 0 0;
+  --color-surface: 10 10 10;
+  --color-surface-elevated: 18 18 18;
+  --color-text: 255 255 255;
+  --color-border: 55 65 81;
+}
+
+:root.light {
+  color-scheme: light;
+  --color-primary: 255 255 255;
+  --color-surface: 249 250 251;
+  --color-surface-elevated: 255 255 255;
+  --color-text: 0 0 0;
+  --color-border: 229 231 235;
+}
+
+body {
+  @apply bg-primary text-off-white antialiased transition-colors duration-300;
+  background-image:
+    linear-gradient(rgba(220, 38, 38, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 38, 38, 0.03) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 45% at 50% -10%, rgba(220, 38, 38, 0.12), transparent);
+  background-size: 48px 48px, 48px 48px, auto;
+}
+
+.grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@layer utilities {
+  .text-gradient-red {
+    @apply text-accent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-primary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full border-2 border-primary bg-surface-elevated;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent/70;
+}
