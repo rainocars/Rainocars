@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     try {
       const response = await api.get('/auth/me');
-      setUser(response.data.data.user);
+      const u = response.data.data.user;
+      setUser(u ? { ...u, id: u.id || u._id, _id: u._id || u.id } : null);
     } catch (error) {
       // If access token expired, try using refresh token
       const refreshToken = localStorage.getItem('raino_refresh_token');
@@ -39,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const { token: newToken, refreshToken: newRefreshToken, user: userData } = refreshRes.data.data;
           localStorage.setItem('raino_access_token', newToken);
           if (newRefreshToken) localStorage.setItem('raino_refresh_token', newRefreshToken);
-          setUser(userData);
+          setUser(userData ? { ...userData, id: userData.id || userData._id, _id: userData._id || userData.id } : null);
         } catch (refreshErr) {
           localStorage.removeItem('raino_access_token');
           localStorage.removeItem('raino_refresh_token');
@@ -76,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { token, refreshToken, user: userData } = response.data.data;
       localStorage.setItem('raino_access_token', token);
       localStorage.setItem('raino_refresh_token', refreshToken);
-      setUser(userData);
+      setUser(userData ? { ...userData, id: userData.id || userData._id, _id: userData._id || userData.id } : null);
       return { ok: true, role: userData.role };
     } catch (error: any) {
       return {
@@ -92,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { token, refreshToken, user: userData } = response.data.data;
       localStorage.setItem('raino_access_token', token);
       localStorage.setItem('raino_refresh_token', refreshToken);
-      setUser(userData);
+      setUser(userData ? { ...userData, id: userData.id || userData._id, _id: userData._id || userData.id } : null);
       return { ok: true };
     } catch (error: any) {
       return {
