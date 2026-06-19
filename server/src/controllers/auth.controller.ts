@@ -41,8 +41,8 @@ export class AuthController {
       { upsert: true, new: true }
     );
 
-    // Dispatch OTP email
-    await EmailService.sendOtp(email, otp);
+    // Dispatch OTP email (run in background to prevent request lag)
+    EmailService.sendOtp(email, otp);
 
     res.status(200).json({
       status: 'success',
@@ -135,7 +135,8 @@ export class AuthController {
         { upsert: true, new: true }
       );
 
-      await EmailService.sendOtp(email, generatedOtp);
+      // Dispatch OTP email (run in background to prevent request lag)
+      EmailService.sendOtp(email, generatedOtp);
 
       return res.status(200).json({
         status: 'otp_required',
@@ -267,8 +268,8 @@ export class AuthController {
       { upsert: true, new: true }
     );
 
-    // Send Forgot Password OTP
-    await EmailService.sendOtp(email, otp);
+    // Send Forgot Password OTP (run in background to prevent request lag)
+    EmailService.sendOtp(email, otp);
 
     res.status(200).json({
       status: 'success',

@@ -15,7 +15,10 @@ export class EmailService {
         auth: { user, pass },
         tls: {
           rejectUnauthorized: process.env.NODE_ENV === 'production'
-        }
+        },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000
       });
     }
     return null;
