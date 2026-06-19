@@ -61,6 +61,25 @@ export const initiateRazorpayPayment = async ({
         name: user.name,
         email: user.email,
         contact: user.phone || '',
+        method: 'upi',
+      },
+      config: {
+        display: {
+          blocks: {
+            upi: {
+              name: 'Pay via UPI / QR Code',
+              instruments: [
+                {
+                  method: 'upi'
+                }
+              ]
+            }
+          },
+          sequence: ['block.upi', 'grid'],
+          preferences: {
+            show_default_blocks: true
+          }
+        }
       },
       theme: {
         color: '#ef4444',
