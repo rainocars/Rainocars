@@ -73,17 +73,28 @@ const UserProfile = () => {
       return;
     }
     const label = DOC_TYPES.find(t => t.type === docType)?.label || 'Document';
+    
+    // Check if a document of this type already exists (except for OTHER)
+    const existingDoc = documents.find(d => d.type === docType);
+    
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       if (typeof reader.result !== 'string') return;
-      addUserDocument(user.id, {
-        type: docType,
-        label,
-        fileName: file.name,
-        fileUrl: reader.result,
-      });
-      refreshUser();
-      toast.success(`${label} uploaded`);
+      try {
+        if (existingDoc && docType !== 'OTHER') {
+          await removeUserDocument(user.id, existingDoc.id);
+        }
+        await addUserDocument(user.id, {
+          type: docType,
+          label,
+          fileName: file.name,
+          fileUrl: reader.result,
+        });
+        refreshUser();
+        toast.success(existingDoc && docType !== 'OTHER' ? `${label} replaced` : `${label} uploaded`);
+      } catch (err) {
+        toast.error('Failed to upload document');
+      }
       e.target.value = '';
     };
     reader.readAsDataURL(file);
@@ -144,8 +155,46 @@ const UserProfile = () => {
               Upload driving license and ID — visible to admin for verification
             </p>
 
-            <div className="space-y-3">
-              <label className="text-sm text-off-white/60">Document type</label>
+            {/* Document Checklist Grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {DOC_TYPES.filter(t => t.type !== 'OTHER').map(t => {
+                const uploadedDoc = documents.find(d => d.type === t.type);
+                return (
+                  <div key={t.type} className="rounded-xl border border-accent/10 p-4 bg-primary/30 flex flex-col justify-between h-36">
+                    <div>
+                      <p className="text-sm font-bold text-off-white">{t.label}</p>
+                      <p className="text-xs text-off-white/40 mt-1">Required for verification</p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <Badge variant={uploadedDoc ? 'success' : 'warning'}>
+                        {uploadedDoc ? 'Uploaded' : 'Missing'}
+                      </Badge>
+                      {uploadedDoc && (
+                        <div className="flex gap-2">
+                          <a
+                            href={uploadedDoc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-accent hover:underline"
+                          >
+                            View
+                          </a>
+                          <button
+                            onClick={() => handleRemoveDoc(uploadedDoc.id)}
+                            className="text-xs text-danger hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3 pt-4 border-t border-accent/10">
+              <label className="text-sm text-off-white/60">Select document type to upload</label>
               <select
                 value={docType}
                 onChange={e => setDocType(e.target.value as UserDocumentType)}
@@ -173,13 +222,13 @@ const UserProfile = () => {
               />
             </div>
 
-            {documents.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-sm font-bold text-off-white">Uploaded ({documents.length})</p>
-                {documents.map(doc => (
+            {documents.filter(d => d.type === 'OTHER').length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-accent/10">
+                <p className="text-sm font-bold text-off-white">Other Uploaded Documents</p>
+                {documents.filter(d => d.type === 'OTHER').map(doc => (
                   <div
                     key={doc.id}
-                    className="flex items-center justify-between gap-4 rounded-xl border border-accent/10 p-4"
+                    className="flex items-center justify-between gap-4 rounded-xl border border-accent/10 p-4 bg-primary/10"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-off-white">{doc.label}</p>

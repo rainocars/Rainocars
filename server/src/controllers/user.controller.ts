@@ -63,22 +63,24 @@ export class UserController {
   });
 
   static getAllUserDocuments = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const users = await User.find({ 'documents.0': { $exists: true } });
+    const users = await User.find({});
     const documents: any[] = [];
     
     for (const u of users) {
-      for (const doc of u.documents) {
-        documents.push({
-          id: (doc as any)._id,
-          userId: u._id,
-          type: doc.type,
-          label: doc.label,
-          fileName: doc.fileName,
-          fileUrl: doc.fileUrl,
-          uploadedAt: doc.uploadedAt,
-          userName: u.name,
-          userEmail: u.email
-        });
+      if (u.documents && u.documents.length > 0) {
+        for (const doc of u.documents) {
+          documents.push({
+            id: (doc as any)._id,
+            userId: u._id,
+            type: doc.type,
+            label: doc.label,
+            fileName: doc.fileName,
+            fileUrl: doc.fileUrl,
+            uploadedAt: doc.uploadedAt,
+            userName: u.name,
+            userEmail: u.email
+          });
+        }
       }
     }
     

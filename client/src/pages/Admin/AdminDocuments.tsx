@@ -38,11 +38,15 @@ const AdminDocuments = () => {
 
   const filtered = docs.filter(d => {
     const q = search.toLowerCase();
+    const userName = (d.userName || '').toLowerCase();
+    const userEmail = (d.userEmail || '').toLowerCase();
+    const fileName = (d.fileName || '').toLowerCase();
+    const label = (d.label || '').toLowerCase();
     const matchSearch =
-      d.userName.toLowerCase().includes(q) ||
-      d.userEmail.toLowerCase().includes(q) ||
-      d.fileName.toLowerCase().includes(q) ||
-      d.label.toLowerCase().includes(q);
+      userName.includes(q) ||
+      userEmail.includes(q) ||
+      fileName.includes(q) ||
+      label.includes(q);
     const matchType = filter === 'ALL' || d.type === filter;
     return matchSearch && matchType;
   });
