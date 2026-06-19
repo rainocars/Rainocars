@@ -95,17 +95,7 @@ const Login = () => {
     setOtp('');
   };
 
-  const fillDemo = (type: 'USER' | 'ADMIN') => {
-    if (type === 'ADMIN') {
-      setEmail('admin@rainocars.com');
-      setPassword('Admin@123');
-    } else {
-      setEmail('user@raino.com');
-      setPassword('User@123');
-    }
-    // Automatically switch back to DETAILS step if they fill demo credentials
-    setStep('DETAILS');
-  };
+
 
   return (
     <div className="min-h-screen bg-primary">
@@ -168,9 +158,14 @@ const Login = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm text-off-white/60">
-                          <Lock className="h-4 w-4 text-accent" /> Password
-                        </label>
+                        <div className="flex justify-between items-center">
+                          <label className="flex items-center gap-2 text-sm text-off-white/60">
+                            <Lock className="h-4 w-4 text-accent" /> Password
+                          </label>
+                          <Link to="/forgot-password" className="text-xs text-accent hover:underline">
+                            Forgot Password?
+                          </Link>
+                        </div>
                         <Input
                           type="password"
                           value={password}
@@ -241,31 +236,7 @@ const Login = () => {
 
               {step === 'DETAILS' && (
                 <>
-                  <div className="space-y-3 rounded-2xl border border-accent/10 bg-primary/40 p-4">
-                    <p className="text-center text-xs font-bold uppercase tracking-widest text-off-white/40">
-                      Quick fill (demo bypass)
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => fillDemo('USER')}
-                        className="rounded-lg border border-accent/10 p-3 text-left text-xs transition-colors hover:border-accent/30"
-                      >
-                        <p className="text-off-white/40 uppercase">User → Dashboard</p>
-                        <p className="font-medium text-off-white">user@raino.com</p>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => fillDemo('ADMIN')}
-                        className="rounded-lg border border-accent/10 p-3 text-left text-xs transition-colors hover:border-accent/30"
-                      >
-                        <p className="text-off-white/40 uppercase">Admin → Panel</p>
-                        <p className="font-medium text-off-white">admin@rainocars.com</p>
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-center text-sm text-off-white/60">
+                  <p className="text-center text-sm text-off-white/60 mt-4">
                     New here?{' '}
                     <Link to="/register" className="font-bold text-accent hover:underline">
                       Create account

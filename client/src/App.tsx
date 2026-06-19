@@ -12,6 +12,7 @@ import CarsListing from '@/pages/CarsListing';
 import CarDetail from '@/pages/CarDetail';
 import Login from '@/pages/Auth/Login';
 import Register from '@/pages/Auth/Register';
+import ForgotPassword from '@/pages/Auth/ForgotPassword';
 import UserDashboard from '@/pages/Dashboard/UserDashboard';
 import UserOverview from '@/pages/Dashboard/UserOverview';
 import UserBookings from '@/pages/Dashboard/UserBookings';
@@ -39,6 +40,7 @@ const AppRoutes = () => (
     <Route path="/cars/:slug" element={<CarDetail />} />
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
+    <Route path="/forgot-password" element={<ForgotPassword />} />
 
     <Route
       path="/booking/confirm"
