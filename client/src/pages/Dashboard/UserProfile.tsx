@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { UserDocumentType } from '@/types';
+import api from '@/services/api';
 
 const DOC_TYPES: { type: UserDocumentType; label: string }[] = [
   { type: 'DRIVING_LICENSE', label: 'Driving License' },
@@ -26,6 +27,35 @@ const UserProfile = () => {
   const [docType, setDocType] = useState<UserDocumentType>('DRIVING_LICENSE');
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword) {
+      toast.error('Both password fields are required');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      await api.post('/users/change-password', {
+        currentPassword,
+        newPassword
+      });
+      toast.success('Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update password');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -178,9 +208,31 @@ const UserProfile = () => {
             <h3 className="flex items-center gap-2 text-xl font-bold text-off-white">
               <Lock className="h-5 w-5 text-accent" /> Security
             </h3>
-            <p className="text-sm text-off-white/50">Password change coming soon</p>
-            <Input type="password" placeholder="Current password" disabled />
-            <Input type="password" placeholder="New password" disabled />
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs text-off-white/60">Current Password</label>
+                <Input
+                  type="password"
+                  placeholder="Current password"
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-off-white/60">New Password</label>
+                <Input
+                  type="password"
+                  placeholder="New password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" variant="primary" className="w-full mt-2" isLoading={isChangingPassword}>
+                Update Password
+              </Button>
+            </form>
           </Card>
 
           <Card className="border-accent/20 bg-accent/5">

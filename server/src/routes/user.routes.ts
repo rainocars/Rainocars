@@ -7,6 +7,7 @@ const router = Router();
 router.use(protect);
 
 // User-specific routes
+router.post('/change-password', UserController.changePassword);
 router.get('/:id', UserController.getUser);
 router.post('/:userId/documents', UserController.addUserDocument);
 router.delete('/:userId/documents/:documentId', UserController.removeUserDocument);

@@ -181,4 +181,17 @@ export class PaymentController {
       data: { refund }
     });
   });
+
+  static getAllPayments = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const payments = await Payment.find()
+      .populate('userId', 'name email')
+      .populate('bookingId')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: payments.length,
+      data: { payments }
+    });
+  });
 }

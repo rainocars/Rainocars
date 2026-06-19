@@ -14,5 +14,6 @@ router.post('/verify', PaymentController.verifyPayment);
 
 // Admin-only refund trigger
 router.post('/refund', restrictTo('ADMIN'), PaymentController.refundPayment);
+router.get('/', restrictTo('ADMIN'), PaymentController.getAllPayments);
 
 export default router;

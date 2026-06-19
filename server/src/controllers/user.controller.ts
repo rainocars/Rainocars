@@ -3,6 +3,7 @@ import User from '../models/User';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 import { AuthRequest } from '../middleware/auth.middleware';
+import bcrypt from 'bcryptjs';
 
 export class UserController {
   static getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -86,4 +87,35 @@ export class UserController {
       data: { documents }
     });
   });
+
+  static changePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as AuthRequest).user!.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      throw new AppError('Current password and new password are required', 400);
+    }
+
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new AppError('Incorrect current password', 400);
+    }
+
+    // Hash and save new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password changed successfully'
+    });
+  });
 }
+
