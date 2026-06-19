@@ -26,29 +26,34 @@ export class EmailService {
     const message = `Your Raino Cars verification code is: ${otp}. It will expire in 10 minutes.`;
 
     if (transporter) {
-      await transporter.sendMail({
-        from: `"Raino Cars" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: 'Raino Cars - Email Verification OTP',
-        text: message,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #E50914; margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; letter-spacing: 1px;">RAINO<span style="color: #ffffff; background-color: #E50914; padding: 2px 6px; border-radius: 4px; margin-left: 2px;">CARS</span></h2>
+      try {
+        await transporter.sendMail({
+          from: `"Raino Cars" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: 'Raino Cars - Email Verification OTP',
+          text: message,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #E50914; margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; letter-spacing: 1px;">RAINO<span style="color: #ffffff; background-color: #E50914; padding: 2px 6px; border-radius: 4px; margin-left: 2px;">CARS</span></h2>
+              </div>
+              <p>Hello,</p>
+              <p>To complete your security verification, please use the following One-Time Password (OTP):</p>
+              <div style="font-size: 28px; font-weight: 800; text-align: center; letter-spacing: 6px; padding: 15px; background-color: #f7f7f7; border: 1px dashed #E50914; border-radius: 8px; margin: 20px 0; color: #111; font-family: monospace;">
+                ${otp}
+              </div>
+              <p>This code will expire in 10 minutes. If you did not request this verification, you can safely ignore this email.</p>
+              <p style="margin-top: 30px;">Drive the moment,<br/><strong>The Raino Cars Team</strong></p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+              <p style="font-size: 11px; color: #999; text-align: center;">This is an automated security email. Please do not reply directly.</p>
             </div>
-            <p>Hello,</p>
-            <p>To complete your security verification, please use the following One-Time Password (OTP):</p>
-            <div style="font-size: 28px; font-weight: 800; text-align: center; letter-spacing: 6px; padding: 15px; background-color: #f7f7f7; border: 1px dashed #E50914; border-radius: 8px; margin: 20px 0; color: #111; font-family: monospace;">
-              ${otp}
-            </div>
-            <p>This code will expire in 10 minutes. If you did not request this verification, you can safely ignore this email.</p>
-            <p style="margin-top: 30px;">Drive the moment,<br/><strong>The Raino Cars Team</strong></p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-            <p style="font-size: 11px; color: #999; text-align: center;">This is an automated security email. Please do not reply directly.</p>
-          </div>
-        `
-      });
-      console.log(`✉️ OTP email successfully sent to ${email}`);
+          `
+        });
+        console.log(`✉️ OTP email successfully sent to ${email}`);
+      } catch (err) {
+        console.error(`❌ SMTP Failed to send mail:`, err);
+        console.log(`\n---------------------------------------\n[MOCK FALLBACK] OTP for ${email}: ${otp}\n---------------------------------------\n`);
+      }
     } else {
       console.log(`\n---------------------------------------\n[MOCK EMAIL SERVICE] OTP for ${email}: ${otp}\n---------------------------------------\n`);
     }
