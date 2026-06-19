@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { UserDocumentType } from '@/types';
 import api from '@/services/api';
+import { base64ToBlobUrl, downloadBase64File } from '@/utils/fileHelpers';
 
 const DOC_TYPES: { type: UserDocumentType; label: string }[] = [
   { type: 'DRIVING_LICENSE', label: 'Driving License' },
@@ -170,16 +171,23 @@ const UserProfile = () => {
                         {uploadedDoc ? 'Uploaded' : 'Missing'}
                       </Badge>
                       {uploadedDoc && (
-                        <div className="flex gap-2">
-                          <a
-                            href={uploadedDoc.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <div className="flex gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => window.open(base64ToBlobUrl(uploadedDoc.fileUrl), '_blank')}
                             className="text-xs text-accent hover:underline"
                           >
                             View
-                          </a>
+                          </button>
                           <button
+                            type="button"
+                            onClick={() => downloadBase64File(uploadedDoc.fileUrl, uploadedDoc.fileName)}
+                            className="text-xs text-success hover:underline"
+                          >
+                            Download
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleRemoveDoc(uploadedDoc.id)}
                             className="text-xs text-danger hover:underline"
                           >
@@ -238,8 +246,19 @@ const UserProfile = () => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="surface" size="sm" asChild>
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">View</a>
+                      <Button
+                        variant="surface"
+                        size="sm"
+                        onClick={() => window.open(base64ToBlobUrl(doc.fileUrl), '_blank')}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadBase64File(doc.fileUrl, doc.fileName)}
+                      >
+                        Download
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleRemoveDoc(doc.id)}>
                         <Trash2 className="h-4 w-4 text-danger" />

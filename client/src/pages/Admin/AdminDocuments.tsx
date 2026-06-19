@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useData } from '@/context/DataContext';
+import { base64ToBlobUrl, downloadBase64File } from '@/utils/fileHelpers';
 
 const typeLabel: Record<string, string> = {
   DRIVING_LICENSE: 'Driving License',
@@ -115,13 +116,24 @@ const AdminDocuments = () => {
                 </div>
               )}
               <div className="flex gap-2">
-                <Button variant="surface" size="sm" className="flex-1" asChild>
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
-                    <ExternalLink className="h-4 w-4" /> View
-                  </a>
+                <Button
+                  variant="surface"
+                  size="sm"
+                  className="flex-1 gap-2"
+                  onClick={() => window.open(base64ToBlobUrl(doc.fileUrl), '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4" /> View
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => downloadBase64File(doc.fileUrl, doc.fileName || `${doc.label}.png`)}
+                >
+                  Download
                 </Button>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/admin/users">User profile</Link>
+                  <Link to="/admin/users">Profile</Link>
                 </Button>
               </div>
             </Card>
