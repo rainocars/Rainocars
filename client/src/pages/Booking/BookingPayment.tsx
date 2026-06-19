@@ -78,9 +78,9 @@ const BookingPayment = () => {
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/20 text-success">
             <CheckCircle className="h-10 w-10" />
           </div>
-          <h1 className="font-display text-3xl font-bold text-off-white">Payment Successful</h1>
+          <h1 className="font-display text-3xl font-bold text-off-white">Payment Page Opened</h1>
           <p className="text-off-white/60">
-            Your booking is confirmed! You can manage it from your dashboard.
+            We have opened the payment gateway in a new tab. Please complete your payment there. Your booking will be approved by the admin once the transaction is verified.
           </p>
           <Card className="p-6">
             <p className="text-sm text-off-white/40">Booking ID</p>
