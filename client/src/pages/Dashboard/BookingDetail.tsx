@@ -1,20 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, MapPin, CreditCard, MessageCircle, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
+import { initiateRazorpayPayment } from '@/utils/payment';
 
 const BookingDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const { bookings, getCarById } = useData();
+  const { bookings, getCarById, refresh } = useData();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const booking = bookings.find((b: any) => b.id === id || b._id === id);
   const car = booking ? getCarById(booking.carId) : undefined;
+
+  const handlePayNow = async () => {
+    if (!user || !booking) return;
+    setIsProcessing(true);
+    try {
+      await initiateRazorpayPayment({
+        bookingId: booking.id,
+        amount: booking.totalAmount,
+        currency: 'INR',
+        carName: car?.name || 'Vehicle',
+        user: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+        },
+        onSuccess: async () => {
+          setIsProcessing(false);
+          toast.success('Payment received & booking confirmed!');
+          await refresh();
+        },
+        onCancel: () => {
+          setIsProcessing(false);
+        },
+        onError: () => {
+          setIsProcessing(false);
+        },
+      });
+    } catch (err) {
+      setIsProcessing(false);
+    }
+  };
 
   if (!booking) {
     return (
@@ -102,15 +136,30 @@ const BookingDetail = () => {
               <span>Total</span>
               <span>₹{booking.totalAmount.toLocaleString()}</span>
             </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-off-white/50">
-              <span>Payment ID</span>
-              <span className="font-mono text-off-white">{booking.paymentId}</span>
-            </div>
+          <div className="space-y-4 text-sm">
+            {booking.paymentId && (
+              <div className="flex justify-between text-off-white/50">
+                <span>Payment ID</span>
+                <span className="font-mono text-off-white">{booking.paymentId}</span>
+              </div>
+            )}
             <div className="flex justify-between text-off-white/50">
               <span>Status</span>
-              <span className="text-success">{booking.paymentStatus}</span>
+              <span className={booking.paymentStatus === 'PAID' ? 'text-success font-semibold' : 'text-accent font-semibold'}>
+                {booking.paymentStatus}
+              </span>
             </div>
+            {booking.paymentStatus === 'UNPAID' && booking.status !== 'CANCELLED' && (
+              <Button
+                variant="primary"
+                className="w-full mt-4 gap-2"
+                onClick={handlePayNow}
+                disabled={isProcessing}
+              >
+                <CreditCard className="h-5 w-5" />
+                {isProcessing ? 'Processing...' : `Pay ₹${booking.totalAmount.toLocaleString()}`}
+              </Button>
+            )}
           </div>
         </Card>
       </div>

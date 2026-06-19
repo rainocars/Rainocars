@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/services/api';
+import { initiateRazorpayPayment } from '@/utils/payment';
 
 const BookingPayment = () => {
   const navigate = useNavigate();
@@ -26,17 +26,6 @@ const BookingPayment = () => {
     }
   }, [draft, car, navigate]);
 
-  // Dynamically load Razorpay Checkout script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   if (!draft || !car) return null;
 
   const handlePayment = async () => {
@@ -46,60 +35,31 @@ const BookingPayment = () => {
     try {
       // 1. Create unpaid booking in the backend
       const booking = await createBooking(draft, user.id);
+      const bId = (booking as any)._id || booking.id;
 
-      // 2. Request Razorpay Order details from backend
-      const orderRes = await api.post('/payments/create-order', {
-        bookingId: (booking as any)._id || booking.id,
-      });
-      const order = orderRes.data.data.order;
-
-      // 3. Open Razorpay checkout modal
-      const options = {
-        key: (import.meta as any).env.VITE_RAZORPAY_KEY_ID || 'rzp_test_dummykeyid',
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Raino Cars',
-        description: `Rental Booking for ${car.name}`,
-        order_id: order.id,
-        handler: async (response: any) => {
-          try {
-            setPaymentStatus('processing');
-            // 4. Verify signature on backend
-            await api.post('/payments/verify', {
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              bookingId: (booking as any)._id || booking.id,
-            });
-
-            // Clear local draft and set state
-            setBookingDraft(null);
-            setBookingId((booking as any)._id || booking.id);
-            setPaymentStatus('success');
-            toast.success('Payment received & booking confirmed!');
-          } catch (err: any) {
-            setPaymentStatus('idle');
-            toast.error(err.response?.data?.message || 'Payment verification failed');
-          }
-        },
-        prefill: {
+      // 2. Open Razorpay checkout modal using the utility function
+      await initiateRazorpayPayment({
+        bookingId: bId,
+        amount: draft.grandTotal,
+        currency: 'INR',
+        carName: car.name,
+        user: {
           name: user.name,
           email: user.email,
-          contact: user.phone || '',
+          phone: user.phone || '',
         },
-        theme: {
-          color: '#ef4444',
+        onSuccess: () => {
+          setBookingDraft(null);
+          setBookingId(bId);
+          setPaymentStatus('success');
         },
-        modal: {
-          ondismiss: () => {
-            setPaymentStatus('idle');
-            toast.error('Payment cancelled');
-          },
+        onCancel: () => {
+          setPaymentStatus('idle');
         },
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+        onError: () => {
+          setPaymentStatus('idle');
+        },
+      });
     } catch (err: any) {
       setPaymentStatus('idle');
       toast.error(err.response?.data?.message || 'Failed to initialize payment');

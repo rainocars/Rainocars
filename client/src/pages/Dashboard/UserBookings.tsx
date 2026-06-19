@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Eye } from 'lucide-react';
+import { MessageCircle, Eye, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -9,6 +10,7 @@ import { TabsContainer, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import { Booking } from '@/types';
+import { initiateRazorpayPayment } from '@/utils/payment';
 
 const statusBadge = (status: Booking['status']) => {
   switch (status) {
@@ -21,8 +23,40 @@ const statusBadge = (status: Booking['status']) => {
 
 const UserBookings = () => {
   const { user } = useAuth();
-  const { bookings, getCarById } = useData();
+  const { bookings, getCarById, refresh } = useData();
   const [activeTab, setActiveTab] = useState('All');
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  const handlePayNow = async (booking: any) => {
+    if (!user) return;
+    setPayingId(booking.id);
+    try {
+      await initiateRazorpayPayment({
+        bookingId: booking.id,
+        amount: booking.totalAmount,
+        currency: 'INR',
+        carName: booking.carName,
+        user: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+        },
+        onSuccess: async () => {
+          setPayingId(null);
+          toast.success('Payment received & booking confirmed!');
+          await refresh();
+        },
+        onCancel: () => {
+          setPayingId(null);
+        },
+        onError: () => {
+          setPayingId(null);
+        },
+      });
+    } catch (err) {
+      setPayingId(null);
+    }
+  };
 
   const enriched = useMemo(() =>
     bookings.map(b => {
@@ -86,8 +120,20 @@ const UserBookings = () => {
                     </div>
                     <div className="flex justify-between">
                       <p className="text-lg font-bold text-accent">₹{booking.totalAmount.toLocaleString()}</p>
-                      <Badge variant="accent">{booking.paymentStatus}</Badge>
+                      <Badge variant={booking.paymentStatus === 'PAID' ? 'success' : 'accent'}>{booking.paymentStatus}</Badge>
                     </div>
+                    {booking.paymentStatus === 'UNPAID' && booking.status !== 'CANCELLED' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="w-full gap-2"
+                        onClick={() => handlePayNow(booking)}
+                        disabled={payingId === booking.id}
+                      >
+                        <CreditCard className="h-4.5 w-4.5" />
+                        {payingId === booking.id ? 'Processing...' : `Pay ₹${booking.totalAmount.toLocaleString()}`}
+                      </Button>
+                    )}
                     <div className="flex gap-2 border-t border-accent/10 pt-4">
                       <Button variant="surface" size="sm" className="flex-1 gap-2" asChild>
                         <Link to={`/dashboard/bookings/${booking.id}`}>

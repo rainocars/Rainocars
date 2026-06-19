@@ -74,7 +74,7 @@ const CarDetail = () => {
     const { pickupCharge, dropCharge } = getDeliveryCharges(pickupMode, dropMode, settings);
     const { tax, grandTotal } = calculateBookingTotals(baseAmount, pickupCharge, dropCharge);
     setBookingDraft({
-      carId: car.id,
+      carId: car.id || car._id,
       startDate,
       endDate,
       pickupLocation: '',
