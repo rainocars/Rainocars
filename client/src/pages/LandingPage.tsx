@@ -291,9 +291,9 @@ const LandingPage = () => {
           <div className="space-y-6">
             <h4 className="text-lg font-bold uppercase tracking-widest text-off-white">Concierge</h4>
             <ul className="space-y-4 text-lg text-off-white/60">
-              <li>Bengaluru, Karnataka, India</li>
-              <li>concierge@rainocars.com</li>
-              <li>+91 98765 43210</li>
+              <li>Hyderabad, Manikonda, Telangana 500089</li>
+              <li>rainocars@gmail.com</li>
+              <li>+91 89711 77578</li>
             </ul>
           </div>
         </div>

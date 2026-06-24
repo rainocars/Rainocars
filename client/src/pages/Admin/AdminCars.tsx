@@ -27,6 +27,8 @@ const emptyForm = {
   transmission: 'Automatic',
   seats: 5,
   pricePerDay: 0,
+  weeklyDiscount: 0,
+  monthlyDiscount: 0,
   description: '',
   selectedFeatures: [] as string[],
   images: [] as string[],
@@ -52,6 +54,8 @@ const AdminCars = () => {
         transmission: car.transmission,
         seats: car.seats,
         pricePerDay: car.pricePerDay,
+        weeklyDiscount: car.weeklyDiscount || 0,
+        monthlyDiscount: car.monthlyDiscount || 0,
         description: car.description,
         selectedFeatures: [...car.features],
         images: [...car.images],
@@ -90,6 +94,8 @@ const AdminCars = () => {
         transmission: form.transmission,
         seats: Number(form.seats),
         pricePerDay: Number(form.pricePerDay),
+        weeklyDiscount: Number(form.weeklyDiscount) || Math.round(Number(form.pricePerDay) * 0.9),
+        monthlyDiscount: Number(form.monthlyDiscount) || Math.round(Number(form.pricePerDay) * 0.8),
         description: form.description.trim(),
         features: form.selectedFeatures,
         images: form.images,
@@ -215,6 +221,14 @@ const AdminCars = () => {
             <div className="space-y-2">
               <label className="text-sm text-off-white/60">Price/Day (₹) *</label>
               <Input type="number" value={form.pricePerDay || ''} onChange={e => setForm(f => ({ ...f, pricePerDay: Number(e.target.value) }))} required />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-off-white/60">Weekly Discount (₹/Day)</label>
+              <Input type="number" value={form.weeklyDiscount || ''} onChange={e => setForm(f => ({ ...f, weeklyDiscount: Number(e.target.value) }))} placeholder="Optional (defaults to 10% off)" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-off-white/60">Monthly Discount (₹/Day)</label>
+              <Input type="number" value={form.monthlyDiscount || ''} onChange={e => setForm(f => ({ ...f, monthlyDiscount: Number(e.target.value) }))} placeholder="Optional (defaults to 20% off)" />
             </div>
             <div className="space-y-2">
               <label className="text-sm text-off-white/60">Fuel</label>
