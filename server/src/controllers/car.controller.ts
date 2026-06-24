@@ -59,13 +59,15 @@ export class CarController {
     const pricePerDay = Number(req.body.pricePerDay);
     const weeklyDiscount = req.body.weeklyDiscount ? Number(req.body.weeklyDiscount) : Math.round(pricePerDay * 0.9);
     const monthlyDiscount = req.body.monthlyDiscount ? Number(req.body.monthlyDiscount) : Math.round(pricePerDay * 0.8);
+    const description = req.body.description?.trim() || `Premium ${req.body.brand || ''} ${name || ''} for a comfortable and reliable drive.`;
 
     const carData = {
       ...req.body,
       images,
       slug,
       weeklyDiscount,
-      monthlyDiscount
+      monthlyDiscount,
+      description
     };
 
     const car = await CarService.createCar(carData);
@@ -104,6 +106,10 @@ export class CarController {
 
     if (req.body.name && !req.body.slug) {
       updateData.slug = req.body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    if (req.body.description !== undefined) {
+      updateData.description = req.body.description?.trim() || 'Premium vehicle for a comfortable and reliable drive.';
     }
 
     const car = await CarService.updateCar(req.params.id, updateData);

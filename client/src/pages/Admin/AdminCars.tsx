@@ -276,13 +276,14 @@ const AdminCars = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm text-off-white/60">Description</label>
+            <label className="text-sm text-off-white/60">Description *</label>
             <textarea
               rows={3}
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               className="w-full rounded-xl border border-accent/15 bg-primary p-4 text-off-white outline-none focus:ring-2 focus:ring-accent/40"
               placeholder="Describe the vehicle..."
+              required
             />
           </div>
 
