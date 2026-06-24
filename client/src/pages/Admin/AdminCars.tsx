@@ -40,6 +40,7 @@ const AdminCars = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [isSaving, setIsSaving] = useState(false);
 
   const openModal = (car?: Car) => {
     if (car) {
@@ -68,7 +69,7 @@ const AdminCars = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.brand.trim()) {
       toast.error('Name and brand are required');
@@ -83,29 +84,37 @@ const AdminCars = () => {
       return;
     }
 
-    saveCar(
-      {
-        name: form.name.trim(),
-        brand: form.brand.trim(),
-        model: form.model.trim() || form.name.trim(),
-        year: Number(form.year),
-        category: form.category,
-        fuelType: form.fuelType,
-        transmission: form.transmission,
-        seats: Number(form.seats),
-        pricePerDay: Number(form.pricePerDay),
-        weeklyDiscount: Number(form.weeklyDiscount) || Math.round(Number(form.pricePerDay) * 0.9),
-        monthlyDiscount: Number(form.monthlyDiscount) || Math.round(Number(form.pricePerDay) * 0.8),
-        description: form.description.trim(),
-        features: form.selectedFeatures,
-        images: form.images,
-        isAvailable: form.isAvailable,
-      },
-      editingId || undefined
-    );
+    setIsSaving(true);
+    try {
+      await saveCar(
+        {
+          name: form.name.trim(),
+          brand: form.brand.trim(),
+          model: form.model.trim() || form.name.trim(),
+          year: Number(form.year),
+          category: form.category,
+          fuelType: form.fuelType,
+          transmission: form.transmission,
+          seats: Number(form.seats),
+          pricePerDay: Number(form.pricePerDay),
+          weeklyDiscount: Number(form.weeklyDiscount) || Math.round(Number(form.pricePerDay) * 0.9),
+          monthlyDiscount: Number(form.monthlyDiscount) || Math.round(Number(form.pricePerDay) * 0.8),
+          description: form.description.trim(),
+          features: form.selectedFeatures,
+          images: form.images,
+          isAvailable: form.isAvailable,
+        },
+        editingId || undefined
+      );
 
-    toast.success(editingId ? 'Car updated' : 'Car added to fleet');
-    setIsModalOpen(false);
+      toast.success(editingId ? 'Car updated' : 'Car added to fleet');
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to save car');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = (car: Car) => {
@@ -288,7 +297,7 @@ const AdminCars = () => {
 
           <div className="flex justify-end gap-3 border-t border-accent/10 pt-4">
             <Button type="button" variant="surface" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" type="submit">{editingId ? 'Save Changes' : 'Add Car'}</Button>
+            <Button variant="primary" type="submit" isLoading={isSaving}>{editingId ? 'Save Changes' : 'Add Car'}</Button>
           </div>
         </form>
       </Modal>
